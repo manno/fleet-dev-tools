@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+if [ ! -d ./cmd/fleetcontroller ]; then
+  echo "please change the current directory to the fleet repo checkout"
+  exit 1
+fi
+
+export GOARCH="${GOARCH:-amd64}"
+export CGO_ENABLED=0
+
+# re-generate code
+#go generate
+
+# fleet
+go build -o bin/fleetcontroller-linux-$GOARCH ./cmd/fleetcontroller
+docker build -f package/Dockerfile -t rancher/fleet:dev --build-arg="ARCH=$GOARCH"  .
+
+# fleet agent
+go build -o "bin/fleet-linux-$GOARCH"
+go build -o "bin/fleetagent-linux-$GOARCH" ./cmd/fleetagent
+docker build -f package/Dockerfile.agent -t rancher/fleet-agent:dev --build-arg="ARCH=$GOARCH" .
+
+# codegen crds
+#go run ./pkg/codegen crds ./build/charts/fleet-crd/templates/crds.yaml

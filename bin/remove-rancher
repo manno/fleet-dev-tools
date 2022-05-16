@@ -1,0 +1,34 @@
+#!/bin/sh
+
+kubectl config use-context k3d-k3s-default
+rancher cluster rm second
+sleep 5
+rancher cluster rm local
+
+helm uninstall -n cattle-system rancher-webhook
+helm uninstall -n cattle-system rancher
+helm uninstall -n cattle-fleet-local-system fleet-agent-local
+helm uninstall -n cattle-fleet-system fleet-crd
+
+echo "deleting namespaced resources"
+for d in clusters.provisioning.cattle.io clusters.cluster.x-k8s.io projects clusterroletemplatebindings projectroletemplatebindings nodes.management.cattle.io; do
+  kubectl get --no-headers "$d" -A | while read ns name _; do kubectl patch "$d" -p '{"metadata":{"finalizers":[]}}' --type=merge -n $ns $name; done
+  kubectl delete "$d" -A --all --now
+done
+
+echo "deleting cluster resources"
+for d in podsecuritypolicytemplates; do
+  kubectl get --no-headers "$d" | while read name _; do kubectl patch "$d" -p '{"metadata":{"finalizers":[]}}' --type=merge $name; done
+  kubectl delete "$d" --all --now
+done
+
+echo "deleting namespaces"
+kubectl get ns -o=jsonpath="{.items[*].metadata.name}" | tr " " "\n" | grep -E "^(cattle|fleet|c-|p-)" | while read ns; do
+  kubectl patch ns -p '{"metadata":{"finalizers":[]}}' --type=merge "$ns"
+  kubectl delete ns "$ns" --now
+done
+
+echo "deleting second cluster"
+kubectl config use-context k3d-k3s-second
+kubectl get ns -o=jsonpath="{.items[*].metadata.name}" | tr " " "\n" | grep -E "^(cattle|fleet|c-|p-)" | xargs kubectl delete ns --now --timeout=5s
+kubectl delete ns local --now

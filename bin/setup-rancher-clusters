@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+if [ ! -d ./github/assets ]; then
+  echo "please change the current directory to the fleet repo checkout"
+  exit 1
+fi
+
+url="${url-172.18.0.1.omg.howdoi.website}"
+
+./.github/assets/setup-latest-rancher.sh "$url"
+
+{ grep -q -m 1 -e ".*"; kill $!; } < <(kubectl get ingress -n cattle-system rancher -o 'go-template={{range .status.loadBalancer.ingress}}{{.ip}}{{"\n"}}{{end}}' -w)
+{ grep -q -m 1 -e "tls-rancher-ingress.*True"; kill $!; } < <(kubectl get certs -n cattle-system -w)
+
+./.github/assets/register-downstream-clusters.sh "$url"
+
+until rancher cluster list | grep second | grep -q active; do echo waiting for cluster registration; sleep 5; done
