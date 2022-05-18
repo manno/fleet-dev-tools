@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-if [ ! -d ./github/assets ]; then
+if [ ! -d ./.github/assets ]; then
   echo "please change the current directory to the fleet repo checkout"
   exit 1
 fi
