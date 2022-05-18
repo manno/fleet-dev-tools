@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -euxo pipefail
+
+if [ ! -d ./charts/fleet ]; then
+  echo "please change the current directory to the fleet repo checkout"
+  exit 1
+fi
+
+kubectl config use-context k3d-k3s-default
+k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct
+helm -n fleet-system install --create-namespace --wait fleet-crd charts/fleet-crd
+helm -n fleet-system upgrade --install --create-namespace --wait fleet charts/fleet
+kubectl -n fleet-system rollout status deploy/fleet-controller
+kubectl -n fleet-system rollout status deploy/fleet-agent
