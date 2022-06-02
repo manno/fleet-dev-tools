@@ -56,5 +56,7 @@ helm -n fleet-system upgrade --install --create-namespace --wait fleet-agent cha
   --set token="$token"
   #--set clientID="fake-random" \
 
-#kubectl config use-context k3d-k3s-default
-#kubectl wait clusterregistrations -n fleet-local --for=jsonpath='{.status.granted}'=true
+# check
+kubectl config use-context k3d-k3s-default
+kubectl wait clusterregistrations -n fleet-local --for=jsonpath='{.status.granted}'=true
+kubectl get clusters.fleet.cattle.io
