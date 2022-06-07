@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -euxo pipefail
+set -eux
 
 if [ ! -d ./charts/fleet ]; then
   echo "please change the current directory to the fleet repo checkout"

@@ -14,7 +14,7 @@ export CGO_ENABLED=0
 #go generate
 
 # fleet
-go build -o bin/fleetcontroller-linux-$GOARCH ./cmd/fleetcontroller
+go build -o bin/fleetcontroller-linux-"$GOARCH" ./cmd/fleetcontroller
 docker build -f package/Dockerfile -t rancher/fleet:dev --build-arg="ARCH=$GOARCH"  .
 
 # fleet agent

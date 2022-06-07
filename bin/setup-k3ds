@@ -9,7 +9,7 @@ if [ -n "$docker_mirror" ]; then
   TMP_CONFIG="$(mktemp)"
   trap "rm -f $TMP_CONFIG" EXIT
 
-  cat << EOF > $TMP_CONFIG
+  cat << EOF > "$TMP_CONFIG"
 mirrors:
   "docker.io":
       endpoint:
