@@ -18,5 +18,7 @@ EOF
   args="--registry-config $TMP_CONFIG"
 fi
 
+# k3d-k3s-default
 k3d cluster create --servers 3 --api-port 36443 -p '80:80@server:0' -p '443:443@server:0' $args
+# k3d-k3s-second
 k3d cluster create k3s-second --servers 1 --api-port 36453 -p '5080:80@server:0' -p '5443:443@server:0' $args

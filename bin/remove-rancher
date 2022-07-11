@@ -1,6 +1,9 @@
 #!/bin/sh
 
-kubectl config use-context k3d-k3s-default
+FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-k3s-default}"
+FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-k3s-second}"
+
+kubectl config use-context "$FLEET_UPSTREAM_CTX"
 rancher cluster rm second
 sleep 5
 rancher cluster rm local
@@ -29,6 +32,6 @@ kubectl get ns -o=jsonpath="{.items[*].metadata.name}" | tr " " "\n" | grep -E "
 done
 
 echo "deleting second cluster"
-kubectl config use-context k3d-k3s-second
+kubectl config use-context "$FLEET_DOWNSTREAM_CTX"
 kubectl get ns -o=jsonpath="{.items[*].metadata.name}" | tr " " "\n" | grep -E "^(cattle|fleet|c-|p-)" | xargs kubectl delete ns --now --timeout=5s
 kubectl delete ns local --now

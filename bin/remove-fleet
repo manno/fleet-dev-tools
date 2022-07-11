@@ -1,6 +1,9 @@
 #!/bin/sh
 
-#kubectl config use-context k3d-k3s-default
+FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-k3s-default}"
+FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-k3s-second}"
+
+kubectl config use-context "$FLEET_UPSTREAM_CTX"
 helm uninstall -n fleet-system fleet
 helm uninstall -n fleet-system fleet-crd
 
@@ -9,7 +12,7 @@ kubectl delete ns fleet-clusters-system --now
 kubectl delete ns fleet-local --now
 
 
-kubectl config use-context k3d-k3s-second
+kubectl config use-context "$FLEET_DOWNSTREAM_CTX"
 helm uninstall -n fleet-system fleet-agent
 
 kubectl delete ns fleet-system --now

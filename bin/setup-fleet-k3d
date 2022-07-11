@@ -7,8 +7,10 @@ if [ ! -d ./charts/fleet ]; then
   exit 1
 fi
 
+FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-k3s-default}"
+
 # single cluster
-kubectl config use-context k3d-k3s-default
+kubectl config use-context "$FLEET_UPSTREAM_CTX"
 k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct
 helm -n fleet-system install --create-namespace --wait fleet-crd charts/fleet-crd
 helm -n fleet-system upgrade --install --create-namespace --wait fleet charts/fleet

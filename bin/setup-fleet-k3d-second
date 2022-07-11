@@ -7,6 +7,9 @@ if [ ! -d ./charts/fleet ]; then
   exit 1
 fi
 
+FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-k3s-default}"
+FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-k3s-second}"
+
 # predefined cluster
 # kubectl apply -f - <<EOF
 # apiVersion: "fleet.cattle.io/v1alpha1"
@@ -18,7 +21,7 @@ fi
 #   clientID: "fake-random"
 # EOF
 
-kubectl config use-context k3d-k3s-default
+kubectl config use-context "$FLEET_UPSTREAM_CTX"
 
 kubectl apply -f - <<EOF
 apiVersion: "fleet.cattle.io/v1alpha1"
@@ -38,7 +41,7 @@ name=$(kubectl get -n default sa default -o=jsonpath='{.secrets[0].name}')
 ca=$(kubectl get -n default secret "$name" -o go-template='{{index .data "ca.crt" | base64decode}}')
 url="${url-172.18.0.1.omg.howdoi.website}"
 
-kubectl config use-context k3d-k3s-second
+kubectl config use-context "$FLEET_DOWNSTREAM_CTX"
 k3d image import rancher/fleet-agent:dev -m direct -c k3s-second
 helm -n fleet-system upgrade --install --create-namespace --wait fleet-agent charts/fleet-agent \
   --set-string labels.env=dev \
