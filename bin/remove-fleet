@@ -1,6 +1,6 @@
 #!/bin/sh
 
-kubectl config use-context k3d-k3s-default
+#kubectl config use-context k3d-k3s-default
 helm uninstall -n fleet-system fleet
 helm uninstall -n fleet-system fleet-crd
 
