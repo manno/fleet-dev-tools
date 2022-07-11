@@ -7,7 +7,7 @@ if [ ! -d ./charts/fleet ]; then
   exit 1
 fi
 
-FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-k3s-default}"
+FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-upstream}"
 
 # single cluster
 kubectl config use-context "$FLEET_UPSTREAM_CTX"

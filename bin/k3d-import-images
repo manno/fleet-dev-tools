@@ -2,5 +2,7 @@
 
 set -euxo pipefail
 
+FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
+
 k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct
-k3d image import rancher/fleet-agent:dev -m direct -c "k3s-second"
+k3d image import rancher/fleet-agent:dev -m direct -c "${FLEET_DOWNSTREAM_CTX#k3d-}"

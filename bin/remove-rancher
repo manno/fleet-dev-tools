@@ -1,7 +1,7 @@
 #!/bin/sh
 
-FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-k3s-default}"
-FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-k3s-second}"
+FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-upstream}"
+FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
 
 kubectl config use-context "$FLEET_UPSTREAM_CTX"
 rancher cluster rm second

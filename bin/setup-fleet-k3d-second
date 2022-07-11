@@ -7,8 +7,8 @@ if [ ! -d ./charts/fleet ]; then
   exit 1
 fi
 
-FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-k3s-default}"
-FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-k3s-second}"
+FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-upstream}"
+FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
 
 # predefined cluster
 # kubectl apply -f - <<EOF
@@ -42,7 +42,7 @@ ca=$(kubectl get -n default secret "$name" -o go-template='{{index .data "ca.crt
 url="${url-172.18.0.1.omg.howdoi.website}"
 
 kubectl config use-context "$FLEET_DOWNSTREAM_CTX"
-k3d image import rancher/fleet-agent:dev -m direct -c k3s-second
+k3d image import rancher/fleet-agent:dev -m direct -c "${FLEET_DOWNSTREAM_CTX#k3d-}"
 helm -n fleet-system upgrade --install --create-namespace --wait fleet-agent charts/fleet-agent \
   --set-string labels.env=dev \
   --set apiServerCA="$ca" \
