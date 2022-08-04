@@ -11,9 +11,9 @@ FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-upstream}"
 
 # single cluster
 kubectl config use-context "$FLEET_UPSTREAM_CTX"
-k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct
-helm -n fleet-system install --create-namespace --wait fleet-crd charts/fleet-crd
-helm -n fleet-system upgrade --install --create-namespace --wait fleet charts/fleet
-kubectl -n fleet-system rollout status deploy/fleet-controller
-{ grep -q -m 1 "fleet-agent"; kill $!; } < <(kubectl get deployment -n fleet-system -w)
-kubectl -n fleet-system rollout status deploy/fleet-agent
+#k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct -c "${FLEET_UPSTREAM_CTX#k3d-}"
+helm -n cattle-fleet-system install --create-namespace --wait fleet-crd charts/fleet-crd
+helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet charts/fleet
+kubectl -n cattle-fleet-system rollout status deploy/fleet-controller
+{ grep -q -m 1 "fleet-agent"; kill $!; } < <(kubectl get deployment -n cattle-fleet-system -w)
+kubectl -n cattle-fleet-system rollout status deploy/fleet-agent
