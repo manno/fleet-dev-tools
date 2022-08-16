@@ -1,0 +1,12 @@
+GOOS=linux go build -o bin/gitjob
+docker build -f package/Dockerfile -t rancher/gitjob:dev .
+#k3d image import rancher/gitjob:dev
+go run pkg/crdgen/main.go > chart/templates/crds.yaml
+gsed -i \
+  -e 's/version:.*/version: v0.0.0/' \
+  -e 's/appVersion:.*/appVersion: v0.0.0/' \
+  chart/Chart.yaml
+helm upgrade --install gitjob chart/ \
+  --set gitjob.tag=dev \
+  # --set tekton.tag=dev \
+  -n cattle-fleet-system --create-namespace --wait
