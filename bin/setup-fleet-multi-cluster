@@ -1,0 +1,17 @@
+#!/bin/bash
+# Description: install fleet into upstream and downstream cluster
+
+set -euxo pipefail
+
+if [ ! -d ./charts/fleet ]; then
+  echo "please change the current directory to the fleet repo checkout"
+  exit 1
+fi
+
+FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-upstream}"
+
+kubectl config use-context "$FLEET_UPSTREAM_CTX"
+#k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct -c "${FLEET_UPSTREAM_CTX#k3d-}"
+
+fleetdev-setup-fleet
+fleetdev-setup-fleet-downstream

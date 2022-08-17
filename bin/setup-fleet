@@ -1,4 +1,5 @@
 #!/bin/bash
+# Description: install fleet standalone into the current kubectl context
 
 set -euxo pipefail
 
