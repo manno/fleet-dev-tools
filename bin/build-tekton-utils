@@ -1,10 +1,19 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+if ! grep -q "tekton" Dockerfile.dapper 2> /dev/null; then
+  echo "please change the current directory to the build-tekton repo checkout"
+  exit 1
+fi
+
 TEKTON_TAG=v0.38.3
 git clone --depth 1 --branch "$TEKTON_TAG" https://github.com/tektoncd/pipeline.git tektoncd-pipeline
 
 pushd tektoncd-pipeline || exit
 export CGO_ENABLED=0
-go build -o ../bin/entrypoint ./cmd/entrypoint
-go build -o ../bin/git-init ./cmd/git-init
+GOOS=linux go build -o ../bin/entrypoint ./cmd/entrypoint
+GOOS=linux go build -o ../bin/git-init ./cmd/git-init
 popd || exit
 
 docker build -f package/Dockerfile -t rancher/tekton-utils:dev .

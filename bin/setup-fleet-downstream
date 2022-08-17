@@ -42,7 +42,7 @@ ca=$(kubectl get -n default secret "$name" -o go-template='{{index .data "ca.crt
 url="${url-172.18.0.1.omg.howdoi.website}"
 
 kubectl config use-context "$FLEET_DOWNSTREAM_CTX"
-k3d image import rancher/fleet-agent:dev -m direct -c "${FLEET_DOWNSTREAM_CTX#k3d-}"
+#k3d image import rancher/fleet-agent:dev -m direct -c "${FLEET_DOWNSTREAM_CTX#k3d-}"
 helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet-agent charts/fleet-agent \
   --set-string labels.env=dev \
   --set apiServerCA="$ca" \
