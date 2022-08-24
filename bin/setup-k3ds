@@ -20,3 +20,4 @@ fi
 
 k3d cluster create upstream --servers 3 --api-port 36443 -p '80:80@server:0' -p '443:443@server:0' $args
 k3d cluster create downstream --servers 1 --api-port 36453 -p '5080:80@server:0' -p '5443:443@server:0' $args
+kubectl config use-context k3d-upstream
