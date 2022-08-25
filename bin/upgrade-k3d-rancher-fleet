@@ -2,14 +2,10 @@
 
 set -euxo pipefail
 
-FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
-
 if [ ! -d ./.github/scripts ]; then
   echo "please change the current directory to the fleet repo checkout"
   exit 1
 fi
 
-k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct
-k3d image import rancher/fleet-agent:dev -m direct -c "${FLEET_DOWNSTREAM_CTX#k3d-}"
-
+fleetdev-k3d-import-images
 ./.github/scripts/upgrade-rancher-fleet-to-dev-fleet.sh

@@ -8,8 +8,8 @@ if [ ! -d ./charts/fleet ]; then
   exit 1
 fi
 
-FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-upstream}"
-FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
+upstream_ctx="${FLEET_E2E_CLUSTER-k3d-upstream}"
+downstream_ctx="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
 
 # predefined cluster
 # kubectl apply -f - <<EOF
@@ -22,7 +22,7 @@ FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
 #   clientID: "fake-random"
 # EOF
 
-kubectl config use-context "$FLEET_UPSTREAM_CTX"
+kubectl config use-context "$upstream_ctx"
 
 kubectl apply -f - <<EOF
 apiVersion: "fleet.cattle.io/v1alpha1"
@@ -52,8 +52,8 @@ fi
 
 url="${url-172.18.0.1.omg.howdoi.website}"
 
-kubectl config use-context "$FLEET_DOWNSTREAM_CTX"
-#k3d image import rancher/fleet-agent:dev -m direct -c "${FLEET_DOWNSTREAM_CTX#k3d-}"
+kubectl config use-context "$downstream_ctx"
+#k3d image import rancher/fleet-agent:dev -m direct -c "${downstream_ctx#k3d-}"
 helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet-agent charts/fleet-agent \
   --set-string labels.env=dev \
   --set apiServerCA="$ca" \
@@ -68,4 +68,4 @@ helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet-ag
   # --set gitjob.gitjob.tag=v0.1.26 \
   # --set gitjob.tekton.tag=v0.1.5 \
 
-kubectl config use-context "$FLEET_UPSTREAM_CTX"
+kubectl config use-context "$upstream_ctx"

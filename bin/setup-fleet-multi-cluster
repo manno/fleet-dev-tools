@@ -8,12 +8,12 @@ if [ ! -d ./charts/fleet ]; then
   exit 1
 fi
 
-FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-upstream}"
+upstream_ctx="${FLEET_E2E_CLUSTER-k3d-upstream}"
 
-kubectl config use-context "$FLEET_UPSTREAM_CTX"
-#k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct -c "${FLEET_UPSTREAM_CTX#k3d-}"
+kubectl config use-context "$upstream_ctx"
+#k3d image import rancher/fleet:dev rancher/fleet-agent:dev -m direct -c "${upstream_ctx#k3d-}"
 
 fleetdev-setup-fleet
 fleetdev-setup-fleet-downstream
 
-kubectl config use-context "$FLEET_UPSTREAM_CTX"
+kubectl config use-context "$upstream_ctx"

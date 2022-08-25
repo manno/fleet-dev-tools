@@ -8,14 +8,19 @@ if [ ! -d ./.github/scripts ]; then
 fi
 
 url="${url-172.18.0.1.omg.howdoi.website}"
-FLEET_UPSTREAM_CTX="${FLEET_E2E_CLUSTER-k3d-upstream}"
-FLEET_DOWNSTREAM_CTX="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
+upstream_ctx="${FLEET_E2E_CLUSTER-k3d-upstream}"
+downstream_ctx="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
 
-export cluster="$FLEET_UPSTREAM_CTX"
+export cluster="$upstream_ctx"
 ./.github/scripts/setup-latest-rancher.sh "$url"
+
+# helm upgrade --install rancher rancher-latest/rancher --version 2.6.6 \
+#   --create-namespace  --namespace cattle-system \
+#   --set hostname=10.4.4.40.omg.howdoi.website \
+#   --set bootstrapPassword=admin
 
 kubectl config use-context "$cluster"
 ./.github/scripts/wait-for-loadbalancer.sh
 
-export cluster_downstream="$FLEET_DOWNSTREAM_CTX"
+export cluster_downstream="$downstream_ctx"
 ./.github/scripts/register-downstream-clusters.sh "$url"
