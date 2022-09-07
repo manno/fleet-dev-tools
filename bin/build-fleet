@@ -15,12 +15,12 @@ export CGO_ENABLED=0
 #go generate
 
 # fleet
-go build -o bin/fleetcontroller-linux-"$GOARCH" ./cmd/fleetcontroller
+go build -gcflags='all=-N -l' -o bin/fleetcontroller-linux-"$GOARCH" ./cmd/fleetcontroller
 docker build -f package/Dockerfile -t rancher/fleet:dev --build-arg="ARCH=$GOARCH"  .
 
 # fleet agent
-go build -o "bin/fleet-linux-$GOARCH"
-go build -o "bin/fleetagent-linux-$GOARCH" ./cmd/fleetagent
+go build -gcflags='all=-N -l' -o "bin/fleet-linux-$GOARCH"
+go build -gcflags='all=-N -l' -o "bin/fleetagent-linux-$GOARCH" ./cmd/fleetagent
 docker build -f package/Dockerfile.agent -t rancher/fleet-agent:dev --build-arg="ARCH=$GOARCH" .
 
 # codegen crds
