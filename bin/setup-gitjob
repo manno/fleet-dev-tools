@@ -19,5 +19,5 @@ gsed -i \
   chart/Chart.yaml
 helm upgrade --install gitjob chart/ \
   --set gitjob.tag=dev \
-  # --set tekton.tag=dev \
   -n cattle-fleet-system --create-namespace --wait
+  # --set tekton.tag=dev \

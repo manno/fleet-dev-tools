@@ -41,8 +41,15 @@ kubectl wait clusterregistrationtoken -n fleet-local --for=jsonpath='{.status.se
 
 token=$(kubectl get secret -n fleet-local second-token -o go-template='{{index .data "values" | base64decode}}' | yq eval .token -)
 
-name=$(kubectl get -n default sa default -o=jsonpath='{.secrets[0].name}')
-ca=$(kubectl get -n default secret "$name" -o go-template='{{index .data "ca.crt" | base64decode}}')
+ca=""
+serverver=$(kubectl version -ojson 2> /dev/null | jq '.serverVersion.minor' | sed 's/"//g')
+if [ "$serverver" -gt 23 ]; then
+  ca=$(kubectl get secret -n cattle-fleet-system fleet-controller-bootstrap-token -o go-template='{{index .data "ca.crt" | base64decode}}')
+else
+  name=$(kubectl get -n default sa default -o=jsonpath='{.secrets[0].name}')
+  ca=$(kubectl get -n default secret "$name" -o go-template='{{index .data "ca.crt" | base64decode}}')
+fi
+
 url="${url-172.18.0.1.omg.howdoi.website}"
 
 kubectl config use-context "$FLEET_DOWNSTREAM_CTX"
@@ -52,6 +59,13 @@ helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet-ag
   --set apiServerCA="$ca" \
   --set apiServerURL="https://$url:36443" \
   --set clusterNamespace="fleet-local" \
-  --set systemRegistrationNamespace="fleet-clusters-system" \
   --set token="$token"
+  #--set systemRegistrationNamespace="fleet-clusters-system" \
   #--set clientID="fake-random" \
+  # --set global.cattle.systemDefaultRegistry=public.ecr.aws/b3e3i8k2 \
+  # --set image.tag=v0.3.9  \
+  # --set agentImage.tag=v0.3.9 \
+  # --set gitjob.gitjob.tag=v0.1.26 \
+  # --set gitjob.tekton.tag=v0.1.5 \
+
+kubectl config use-context "$FLEET_UPSTREAM_CTX"

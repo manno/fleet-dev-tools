@@ -15,3 +15,5 @@ kubectl config use-context "$FLEET_UPSTREAM_CTX"
 
 fleetdev-setup-fleet
 fleetdev-setup-fleet-downstream
+
+kubectl config use-context "$FLEET_UPSTREAM_CTX"
