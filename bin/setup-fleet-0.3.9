@@ -1,0 +1,22 @@
+#!/bin/bash
+# Description: install fleet standalone into the current kubectl context
+
+set -euxo pipefail
+
+if [ ! -d ./charts/fleet ]; then
+  echo "please change the current directory to the fleet repo checkout"
+  exit 1
+fi
+
+# single cluster
+helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet-crd charts/fleet-crd
+helm -n cattle-fleet-system upgrade --install --create-namespace --wait \
+  --set gitjob.gitjob.tag=v0.1.26 \
+  --set gitjob.tekton.tag=v0.1.5 \
+  --set image.tag=v0.3.9 \
+  --set agentImage.tag=v0.3.9 \
+  fleet https://github.com/rancher/fleet/releases/download/v0.3.9/fleet-0.3.9.tgz
+
+kubectl -n cattle-fleet-system rollout status deploy/fleet-controller
+{ grep -q -m 1 "fleet-agent"; kill $!; } < <(kubectl get deployment -n cattle-fleet-system -w)
+kubectl -n cattle-fleet-system rollout status deploy/fleet-agent
