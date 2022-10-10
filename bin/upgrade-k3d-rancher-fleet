@@ -7,5 +7,5 @@ if [ ! -d ./.github/scripts ]; then
   exit 1
 fi
 
-fleetdev-k3d-import-images
+fleetdev-import-images-k3d
 ./.github/scripts/upgrade-rancher-fleet-to-dev-fleet.sh
