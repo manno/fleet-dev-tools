@@ -50,7 +50,8 @@ else
   ca=$(kubectl get -n default secret "$name" -o go-template='{{index .data "ca.crt" | base64decode}}')
 fi
 
-url="${url-172.18.0.1.omg.howdoi.website}"
+# docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}'
+url="${url-172.17.0.1.omg.howdoi.website}"
 
 kubectl config use-context "$downstream_ctx"
 #k3d image import rancher/fleet-agent:dev -m direct -c "${downstream_ctx#k3d-}"

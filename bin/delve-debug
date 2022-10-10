@@ -2,7 +2,7 @@
 
 # https://github.com/moio/delve-debugger
 
-set -e
+set -ex
 
 ns=cattle-fleet-system
 app="$1"
