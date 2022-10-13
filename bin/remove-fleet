@@ -1,4 +1,5 @@
 #!/bin/sh
+# Warning: do not use this script on a production system!
 
 upstream_ctx="${FLEET_E2E_CLUSTER-k3d-upstream}"
 downstream_ctx="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"

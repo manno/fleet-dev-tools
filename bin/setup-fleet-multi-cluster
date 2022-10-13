@@ -17,3 +17,5 @@ fleetdev-setup-fleet
 fleetdev-setup-fleet-downstream
 
 kubectl config use-context "$upstream_ctx"
+
+.github/scripts/label-downstream-cluster.sh

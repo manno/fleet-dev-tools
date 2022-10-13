@@ -1,6 +1,6 @@
 #!/bin/bash
-
-# https://github.com/moio/delve-debugger
+# Usage: delve-debug fleet-controller
+# see https://github.com/moio/delve-debugger for full version
 
 set -ex
 
