@@ -7,5 +7,9 @@ if [ ! -d ./.github/scripts ]; then
   exit 1
 fi
 
+ctx=$(kubectl config current-context)
+
 fleetdev-import-images-k3d
 ./.github/scripts/upgrade-rancher-fleet-to-dev-fleet.sh
+
+kubectl config use-context "$ctx"

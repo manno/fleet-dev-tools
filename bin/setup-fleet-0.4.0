@@ -8,14 +8,16 @@ if [ ! -d ./charts/fleet ]; then
   exit 1
 fi
 
+VER=0.4.0
+
 # single cluster
-helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet-crd charts/fleet-crd
+helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet-crd "https://github.com/rancher/fleet/releases/download/v$VER/fleet-crd-$VER.tgz"
 helm -n cattle-fleet-system upgrade --install --create-namespace --wait \
-  --set gitjob.gitjob.tag=v0.1.26 \
-  --set gitjob.tekton.tag=v0.1.5 \
-  --set image.tag=v0.3.9 \
-  --set agentImage.tag=v0.3.9 \
-  fleet https://github.com/rancher/fleet/releases/download/v0.3.9/fleet-0.3.9.tgz
+  --set "image.tag=v$VER" \
+  --set "agentImage.tag=v$VER" \
+  fleet "https://github.com/rancher/fleet/releases/download/v$VER/fleet-$VER.tgz"
+  # --set gitjob.gitjob.tag=v0.1.26 \
+  # --set gitjob.tekton.tag=v0.1.5 \
 
 kubectl -n cattle-fleet-system rollout status deploy/fleet-controller
 { grep -q -m 1 "fleet-agent"; kill $!; } < <(kubectl get deployment -n cattle-fleet-system -w)
