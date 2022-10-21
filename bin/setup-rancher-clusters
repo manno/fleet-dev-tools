@@ -12,6 +12,7 @@ upstream_ctx="${FLEET_E2E_CLUSTER-k3d-upstream}"
 downstream_ctx="${FLEET_E2E_CLUSTER_DOWNSTREAM-k3d-downstream}"
 
 export cluster="$upstream_ctx"
+helm repo update
 ./.github/scripts/setup-latest-rancher.sh "$url"
 
 # helm upgrade --install rancher rancher-latest/rancher --version 2.6.6 \
@@ -24,3 +25,6 @@ kubectl config use-context "$cluster"
 
 export cluster_downstream="$downstream_ctx"
 ./.github/scripts/register-downstream-clusters.sh "$url"
+
+kubectl config use-context "$cluster"
+./.github/scripts/label-downstream-cluster.sh

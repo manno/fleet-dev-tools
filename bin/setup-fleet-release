@@ -8,7 +8,7 @@ if [ ! -d ./charts/fleet ]; then
   exit 1
 fi
 
-VER=0.4.0
+VER=${VER-0.4.0}
 
 # single cluster
 helm -n cattle-fleet-system upgrade --install --create-namespace --wait fleet-crd "https://github.com/rancher/fleet/releases/download/v$VER/fleet-crd-$VER.tgz"
