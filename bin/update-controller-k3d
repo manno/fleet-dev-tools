@@ -15,6 +15,7 @@ export CGO_ENABLED=0
 go build -gcflags='all=-N -l' -o bin/fleetcontroller-linux-"$GOARCH" ./cmd/fleetcontroller
 docker build -f package/Dockerfile -t rancher/fleet:dev --build-arg="ARCH=$GOARCH"  .
 
-fleet_ctx=$(kubectl config current-context)
-k3d image import rancher/fleet:dev -m direct -c "${fleet_ctx#k3d-}"
+# get cluster for current context
+cluster=$(kubectl config get-contexts | ruby -ane 'print $F[2] if /^\*/')
+k3d image import rancher/fleet:dev -m direct -c "${cluster#k3d-}"
 kubectl delete pod -l app=fleet-controller -n cattle-fleet-system

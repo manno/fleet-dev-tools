@@ -12,7 +12,10 @@ GOOS=linux go build -o bin/gitjob
 docker build -f package/Dockerfile -t rancher/gitjob:dev .
 #k3d image import rancher/gitjob:dev
 
-go run pkg/crdgen/main.go > chart/templates/crds.yaml
+if ! git diff --quiet HEAD origin/master --  pkg/apis; then
+  go run pkg/crdgen/main.go > chart/templates/crds.yaml
+fi
+# gitjob is normally not installed as a chart
 gsed -i \
   -e 's/version:.*/version: v0.0.0/' \
   -e 's/appVersion:.*/appVersion: v0.0.0/' \

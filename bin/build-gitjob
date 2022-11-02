@@ -1,0 +1,20 @@
+#!/bin/bash
+# Description: build gitjob
+
+set -euxo pipefail
+
+if [ ! -d ./pkg/controller/gitjob ]; then
+  echo "please change the current directory to the gitjob repo checkout"
+  exit 1
+fi
+
+export GOOS=linux
+export GOARCH="${GOARCH:-amd64}"
+export CGO_ENABLED=0
+
+go build -gcflags='all=-N -l' -o bin/gitjob
+docker build -t rancher/gitjob:dev -f package/Dockerfile  .
+k3d image import rancher/gitjob:dev -c upstream
+
+# TODO patch deployment
+kubectl delete pod -l app=gitjob -n cattle-fleet-system
