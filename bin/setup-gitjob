@@ -14,7 +14,7 @@ docker build -f package/Dockerfile -t rancher/gitjob:dev .
 
 go run pkg/crdgen/main.go > chart/templates/crds.yaml
 # gitjob is normally not installed as a chart
-gsed -i \
+sed -i \
   -e 's/version:.*/version: v0.0.0/' \
   -e 's/appVersion:.*/appVersion: v0.0.0/' \
   chart/Chart.yaml
