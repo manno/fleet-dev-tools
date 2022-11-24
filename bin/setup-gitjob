@@ -7,7 +7,7 @@ if [ ! -d pkg/controller/gitjob ]; then
   exit 1
 fi
 
-GOOS=linux go build -o bin/gitjob
+GOOS=linux CGO_ENABLED=0 go build -o bin/gitjob
 
 docker build -f package/Dockerfile -t rancher/gitjob:dev .
 #k3d image import rancher/gitjob:dev
