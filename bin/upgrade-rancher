@@ -1,1 +1,7 @@
-helm upgrade rancher rancher-latest/rancher --version v2.6.9 --devel --install --wait --create-namespace --namespace cattle-system --set hostname=10.4.4.40.omg.howdoi.website
+#!/bin/bash
+
+set -euxo pipefail
+
+version="${1-v2.7.0}"
+url="${url-172.18.0.1.omg.howdoi.website}"
+helm upgrade rancher rancher-latest/rancher --version "$version" --devel --install --wait --create-namespace --namespace cattle-system --set hostname="$url" --set useBundledSystemChart=true

@@ -1,4 +1,6 @@
+#!/bin/bash
 
+set -euxo pipefail
 
 url_crd="https://github.com/rancher/fleet/releases/download/v0.4.1/fleet-crd-0.4.1.tgz"
 helm upgrade fleet-crd "$url_crd" --wait -n cattle-fleet-system
