@@ -5,7 +5,10 @@ set -euxo pipefail
 url="${url-172.18.0.1.omg.howdoi.website}"
 cluster="${cluster-k3d-upstream}"
 
-version=$(curl -s https://api.github.com/repos/rancher/rancher/releases | jq -r "sort_by(.tag_name) | [ .[] | select(.draft | not) ] | .[-1].tag_name")
+version="${1-}"
+if [ -z "$version" ]; then
+  version=$(curl -s https://api.github.com/repos/rancher/rancher/releases | jq -r "sort_by(.tag_name) | [ .[] | select(.draft | not) ] | .[-1].tag_name")
+fi
 
 # kubectl config use-context "$cluster"
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
@@ -26,6 +29,9 @@ helm upgrade rancher rancher-latest/rancher --version "$version" \
   --set "extraEnv[0].value=https://$url" \
   --set "extraEnv[1].name=CATTLE_BOOTSTRAP_PASSWORD" \
   --set "extraEnv[1].value=rancherpassword"
+
+# upgrade
+# helm upgrade rancher rancher-latest/rancher --version v1.7.0 --devel --install --wait --set hostname="$url"
 
 # wait for deployment of rancher
 kubectl -n cattle-system rollout status deploy/rancher

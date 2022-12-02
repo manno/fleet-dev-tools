@@ -1,0 +1,1 @@
+helm upgrade rancher rancher-latest/rancher --version v2.6.9 --devel --install --wait --create-namespace --namespace cattle-system --set hostname=10.4.4.40.omg.howdoi.website

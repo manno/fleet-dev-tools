@@ -15,7 +15,7 @@ export cluster="$upstream_ctx"
 helm repo update
 ./.github/scripts/setup-latest-rancher.sh "$url"
 
-# helm upgrade --install rancher rancher-latest/rancher --version 2.6.6 \
+# helm upgrade --install rancher rancher-latest/rancher --version 2.6.9 \
 #   --create-namespace  --namespace cattle-system \
 #   --set hostname=10.4.4.40.omg.howdoi.website \
 #   --set bootstrapPassword=admin
