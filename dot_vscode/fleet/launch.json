@@ -1,0 +1,107 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch CLI",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "args": [
+        "apply",
+        "--targets-file",
+        "${env:HOME}/co/fleet/contrib/helm2bundle/targets.yaml",
+        "-n",
+        "fleet-local",
+        "-o",
+        "-",
+        "external-secrets",
+        "helm2bundle/repo/",
+      ],
+    },
+    {
+      "name": "Launch Controller",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/fleetcontroller",
+      "args": [],
+      "env": {
+        "NAMESPACE": "cattle-fleet-system",
+        "FLEET_PROPAGATE_DEBUG_SETTINGS_TO_AGENTS": "true",
+      },
+    },
+    {
+      "name": "Launch Agent",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/fleetagent",
+      "args": [],
+      "env": {
+        "NAMESPACE": "cattle-fleet-local-system",
+        "AGENT_SCOPE": "cattle-local-fleet-system",
+        "CHECKIN_INTERVAL": "15m",
+        //"GENERATION": "bundle",
+      },
+    },
+    {
+      "name": "Launch Downstream Agent",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/fleetagent",
+      "args": [
+        "--debug",
+        "--debug-level",
+        "0",
+      ],
+      "env": {
+        "NAMESPACE": "cattle-fleet-system",
+        "AGENT_SCOPE": "",
+        "CHECKIN_INTERVAL": "0s",
+        //"GENERATION": "bundle",
+      },
+    },
+    {
+      "name": "DLV on localhost",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "remotePath": "${workspaceFolder}",
+      "port": 4000,
+      "host": "127.0.0.1"
+    },
+    {
+      "name": "DLV on remote",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      //"remotePath": "${workspaceFolder}",
+      "port": 4000,
+      "host": "192.168.1.10",
+      "substitutePath": [
+        {
+          "from": "${env:HOME}",
+          "to": "/home/${env:USER}",
+        },
+      ]
+    },
+    {
+      "name": "Integrationtests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/integrationtests/agent",
+      "args": [],
+      "env": {
+        "KUBEBUILDER_ASSETS": "${env:HOME}/Library/Application Support/io.kubebuilder.envtest/k8s/1.25.0-darwin-arm64",
+        "USE_EXTERNAL_CLUSTER": "false",
+      },
+      "showLog": true
+    }
+  ]
+}

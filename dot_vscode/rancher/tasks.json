@@ -1,0 +1,26 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "resetCluster",
+            "type": "shell",
+            "command": "k3d cluster delete upstream; k3d cluster create upstream --servers 1 --api-port 36443 -p 80:80@server:0 -p 443:443@server:0; k3d kubeconfig merge -a -d -u; kubectl config use-context k3d-upstream", 
+            // ;../fleet/fleet/dev/import-images-k3d
+            "args": [],
+            "options": {
+                "env": {
+                    "FLEET_E2E_CLUSTER_DOWNSTREAM": "k3d-upstream",
+                    "KUBECONFIG": "${env:HOME}/.kube/config",
+                }
+            }
+        },
+        {
+            "label": "importFleetDevImage",
+            "type": "shell",
+            "command": "fleetdev-import-images-k3d",
+            "args": [],
+        }
+    ]
+}
