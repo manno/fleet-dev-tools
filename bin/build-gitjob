@@ -16,5 +16,4 @@ go build -gcflags='all=-N -l' -o bin/gitjob
 docker build -t rancher/gitjob:dev -f package/Dockerfile  .
 k3d image import rancher/gitjob:dev -c upstream
 
-# TODO patch deployment
-kubectl delete pod -l app=gitjob -n cattle-fleet-system
+kubectl set image -n cattle-fleet-system deployment/gitjob gitjob=rancher/gitjob:dev
