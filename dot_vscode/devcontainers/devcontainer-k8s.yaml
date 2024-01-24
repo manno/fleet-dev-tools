@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: devcontainer
+  labels:
+    app: fleetdevcontainer
+  namespace: cattle-fleet-system
+spec:
+  serviceAccount: fleet-agent
+  containers:
+
+  - image: vsc-fleet-407a925de0f33438083c8d1880a1de009517c4281d6ec9ecaba4d575adc4e878-features
+    # https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+    imagePullPolicy: Never
+    name: go-container
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      #fsGroup: 2000
+    command: ["/bin/sh", "-c", "while sleep 1000; do :; done"]
+    volumeMounts:
+    - mountPath: /workspace
+      name: code-volume
+    - mountPath: /home/vscode/.cache
+      name: cache-volume
+
+  volumes:
+  - name: code-volume
+    hostPath:
+
+      # location of your code on the host; on Linux this is the actual directory:
+      path: /workspace
+
+      # this field is optional
+      type: Directory
+
+  - name: cache-volume
+    # same as lifetime of the pod
+    # https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
+    emptyDir: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: devcontainer
+spec:
+  type: NodePort
+  selector:
+    app: fleetdevcontainer
+  ports:
+    - protocol: TCP
+      # cluster applications can come in via this port
+      # also, this is the localhost port I can hit with rancher running locally
+      port: 6060
+      # traffic will be forwarded to pods with label "fastapi" on this port
+      targetPort: 6060
+      # connect to this port on the machine hosting the cluster node
+      nodePort: 30080
