@@ -1,0 +1,27 @@
+#!/bin/bash
+# Description: build fleet binary and image with debug flags
+
+set -exo pipefail
+
+if [ ! -d ./cmd/fleetcontroller ]; then
+  echo "please change the current directory to the fleet repo checkout"
+  exit 1
+fi
+
+export GOARCH="${GOARCH:-amd64}"
+export CGO_ENABLED=0
+
+# re-generate code
+if ! git diff --quiet HEAD origin/master --  pkg/apis/fleet.cattle.io/v1alpha1; then
+  if [ -z "$NOGENERATE" ]; then
+    go generate
+  fi
+fi
+
+export GOOS=${GOOS:-linux}
+# fleet
+go build -gcflags='all=-N -l' -o bin/fleetcontroller-"$GOOS"-"$GOARCH" ./cmd/fleetcontroller
+
+# fleet agent
+go build -gcflags='all=-N -l' -o "bin/fleet-$GOOS-$GOARCH" ./cmd/fleetcli
+go build -gcflags='all=-N -l' -o "bin/fleetagent-$GOOS-$GOARCH" ./cmd/fleetagent
