@@ -22,18 +22,20 @@
         // CATTLE_DEV_MODE will override leader election. Will set CATTLE_SYSTEM_CHART_DEFAULT_BRANCH=dev
         "CATTLE_DEV_MODE": "30",
         // CATTLE_SYSTEM_CATALOG is either "bundled" for air gap or "external"
-        // "CATTLE_SYSTEM_CATALOG": "bundled",
+        "CATTLE_SYSTEM_CATALOG": "bundled",
         //TODO CATTLE_CHART_DEFAULT_URL is added by https://github.com/rancher/rancher/pull/40281/files
         //TODO "CATTLE_CHART_DEFAULT_URL": "https://github.com/manno/rancher-charts",
         // CATTLE_CHART_DEFAULT_BRANCH is used the branch of the chart repo for fleet (rancher-charts)
         //"CATTLE_CHART_DEFAULT_BRANCH": "release-v2.7",
-        //"CATTLE_CHART_DEFAULT_BRANCH": "dev-v2.7",
-        "CATTLE_CHART_DEFAULT_BRANCH": "test-fleet",
+        "CATTLE_CHART_DEFAULT_BRANCH": "dev-v2.7",
+        //"CATTLE_CHART_DEFAULT_BRANCH": "test-fleet",
         // CATTLE_SYSTEM_CHART_DEFAULT_URL defaults to https://git.rancher.io/system-charts
         // CATTLE_SYSTEM_CHART_DEFAULT_URL=""
         // CATTLE_SYSTEM_CHART_DEFAULT_BRANCH overrides the default branch for ...
         // CATTLE_SYSTEM_CHART_DEFAULT_BRANCH="dev"
         "CATTLE_BOOTSTRAP_PASSWORD": "rancherpassword",
+        //"CATTLE_SERVER_URL": "https://10.4.4.20.omg.howdoi.website:8443"
+        //"CATTLE_SERVER_URL": "https://10.4.4.244.omg.howdoi.website:8443"
         //"CATTLE_SERVER_URL": "https://172.19.0.1.omg.howdoi.website:6443"
         "CATTLE_SERVER_URL": "https://192.168.205.1.omg.howdoi.website:6443"
       }
@@ -49,11 +51,11 @@
         "--debug"
       ],
       "env": {
-        "KUBECONFIG": "${env:HOME}/.kube/config.remote",
         "CATTLE_DEV_MODE": "30",
         "CATTLE_SYSTEM_CATALOG": "bundled",
-        "CATTLE_CHART_DEFAULT_BRANCH": "test-fleet",
+        "CATTLE_CHART_DEFAULT_BRANCH": "fleet-v2.6",
         "CATTLE_FLEET_MIN_VERSION": "",
+        "KUBECONFIG": "${env:HOME}/.kube/config.remote",
         "CATTLE_BOOTSTRAP_PASSWORD": "rancherpassword",
         "CATTLE_SERVER_URL": "http://localhost:8080"
       }

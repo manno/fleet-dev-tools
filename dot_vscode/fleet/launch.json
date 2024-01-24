@@ -9,7 +9,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}",
+      "program": "${workspaceFolder}/cmd/fleetcli",
       "args": [
         "apply",
         "--targets-file",
@@ -23,15 +23,21 @@
       ],
     },
     {
-      "name": "Launch Controller",
+      "name": "Launch Fleet Controller locally",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/fleetcontroller",
-      "args": [],
+      "args": [
+        "--debug",
+        "--debug-level=10"
+      ],
       "env": {
+        "KUBECONFIG": "${env:HOME}/.kube/config",
         "NAMESPACE": "cattle-fleet-system",
+        "CATTLE_DEV_MODE": "true",
         "FLEET_PROPAGATE_DEBUG_SETTINGS_TO_AGENTS": "true",
+        "GOFLAGS": "-buildvcs=false",
       },
     },
     {
@@ -40,11 +46,15 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/cmd/fleetagent",
-      "args": [],
+      "args": [
+        "--debug",
+        "--debug-level",
+        "0",
+      ],
       "env": {
-        "NAMESPACE": "cattle-fleet-local-system",
-        "AGENT_SCOPE": "cattle-local-fleet-system",
-        "CHECKIN_INTERVAL": "15m",
+        "NAMESPACE": "cattle-fleet-system",
+        "AGENT_SCOPE": "",
+        "GOFLAGS": "-buildvcs=false",
         //"GENERATION": "bundle",
       },
     },
@@ -60,9 +70,28 @@
         "0",
       ],
       "env": {
-        "NAMESPACE": "cattle-fleet-system",
+        "NAMESPACE": "cattle-fleet-local-system",
         "AGENT_SCOPE": "",
         "CHECKIN_INTERVAL": "0s",
+        //"GENERATION": "bundle",
+      },
+    },
+    {
+      "name": "Launch Clusterstatus Agent",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/fleetagent",
+      "args": [
+        "clusterstatus",
+        "--debug",
+        "--debug-level",
+        "0",
+      ],
+      "env": {
+        "NAMESPACE": "cattle-fleet-system",
+        "CHECKIN_INTERVAL": "5s",
+        "GOFLAGS": "-buildvcs=false",
         //"GENERATION": "bundle",
       },
     },
@@ -91,11 +120,37 @@
       ]
     },
     {
-      "name": "Integrationtests",
+      "name": "Integrationtest CLI",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/integrationtests/cli/cleanup",
+      "args": [],
+      "env": {
+        "KUBEBUILDER_ASSETS": "${env:HOME}/Library/Application Support/io.kubebuilder.envtest/k8s/1.25.0-darwin-arm64",
+        "USE_EXTERNAL_CLUSTER": "false",
+      },
+      "showLog": true
+    },
+    {
+      "name": "Integrationtest Agent",
       "type": "go",
       "request": "launch",
       "mode": "test",
       "program": "${workspaceFolder}/integrationtests/agent",
+      "args": [],
+      "env": {
+        "KUBEBUILDER_ASSETS": "${env:HOME}/Library/Application Support/io.kubebuilder.envtest/k8s/1.25.0-darwin-arm64",
+        "USE_EXTERNAL_CLUSTER": "false",
+      },
+      "showLog": true
+    },
+    {
+      "name": "Integrationtest Bundle",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/integrationtests/controller/gitrepo",
       "args": [],
       "env": {
         "KUBEBUILDER_ASSETS": "${env:HOME}/Library/Application Support/io.kubebuilder.envtest/k8s/1.25.0-darwin-arm64",
