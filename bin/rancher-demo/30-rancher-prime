@@ -1,0 +1,37 @@
+#!/bin/bash
+set -e
+
+upstream_ctx=${upstream_ctx-k3d-$name}
+kubectl config use-context "$upstream_ctx"
+
+password=${password-rancherpassword}
+
+helm repo update
+
+version="${rancher_version-}"
+if [ -z "$version" ]; then
+  version=$(curl -s https://api.github.com/repos/rancher/rancher/releases | jq -r "sort_by(.tag_name) | [ .[] | select(.draft | not) ] | .[-1].tag_name")
+fi
+
+helm upgrade rancher rancher-prime/rancher --version "$version" \
+  --devel \
+  --install --wait \
+  --create-namespace \
+  --namespace cattle-system \
+  --set replicas=1 \
+  --set hostname="$public_hostname" \
+  --set bootstrapPassword=admin \
+  --set "extraEnv[0].name=CATTLE_SERVER_URL" \
+  --set "extraEnv[0].value=https://$public_hostname" \
+  --set "extraEnv[1].name=CATTLE_BOOTSTRAP_PASSWORD" \
+  --set "extraEnv[1].value=$password"
+
+# wait for deployment of rancher
+kubectl -n cattle-system rollout status deploy/rancher
+
+# wait for rancher to create fleet namespace, deployment and controller
+{ grep -q -m 1 "fleet"; kill $!; } < <(kubectl get deployments -n cattle-fleet-system -w)
+kubectl -n cattle-fleet-system rollout status deploy/fleet-controller
+{ grep -E -q -m 1 "fleet-agent-local.*1/1"; kill $!; } < <(kubectl get bundles -n fleet-local -w)
+
+./.github/scripts/wait-for-loadbalancer.sh

@@ -1,0 +1,72 @@
+#!/bin/bash
+set -euxo pipefail
+
+name=${name-upstream}
+upstream_ctx=${upstream_ctx-k3d-$name}
+public_hostname="${public_hostname-172.18.0.1.omg.howdoi.website}"
+
+# cannot overlap with other installations
+downstream_start=${downstream_start-1}
+downstream_end=${downstream_end-10}
+downstream_prefix=${downstream_prefix-demo}
+
+rancher_skip_login=${rancher_skip_login-}
+ctx=$(kubectl config current-context)
+
+# Install Downstreams
+kubectl config use-context "$upstream_ctx"
+
+if [ -z "$rancher_skip_login" ]; then
+# hardcoded token, cluster is ephemeral and private
+token="token-ci:zfllcbdr4677rkj4hmlr8rsmljg87l7874882928khlfs2pmmcq7l5"
+
+user=$(kubectl get users -o go-template='{{range .items }}{{.metadata.name}}{{"\n"}}{{end}}' | tail -1)
+sed "s/user-zvnsr/$user/" <<'EOF' | kubectl apply -f -
+apiVersion: management.cattle.io/v3
+kind: Token
+authProvider: local
+current: false
+description: mytoken
+expired: false
+expiresAt: ""
+isDerived: true
+lastUpdateTime: ""
+metadata:
+  generateName: token-
+  labels:
+    authn.management.cattle.io/token-userId: user-zvnsr
+    cattle.io/creator: norman
+  name: token-ci
+ttl: 0
+token: zfllcbdr4677rkj4hmlr8rsmljg87l7874882928khlfs2pmmcq7l5
+userId: user-zvnsr
+userPrincipal:
+  displayName: Default Admin
+  loginName: admin
+  me: true
+  metadata:
+    creationTimestamp: null
+    name: local://user-zvnsr
+  principalType: user
+  provider: local
+EOF
+
+echo -e "4\n" | rancher login "https://$public_hostname" --token "$token" --skip-verify
+fi
+
+clusters=()
+for i in $( seq "$downstream_start" "$downstream_end" ); do
+  clusters+=("$(printf "$downstream_prefix%d" "$i")")
+done
+
+for c in "${clusters[@]}"; do
+  rancher clusters create "$c" --import || true
+  until rancher cluster ls --format json | jq -r 'select(.Name=="'"$c"'") | .ID' | grep -Eq "c-[a-z0-9]" ; do sleep 10; done
+  id=$( rancher cluster ls --format json | jq -r 'select(.Name=="'"$c"'") | .ID' )
+
+  kubectl config use-context k3d-"$c"
+  rancher cluster import "$id"
+  rancher cluster import "$id" | grep curl | sh
+done
+
+kubectl config use-context "$ctx"

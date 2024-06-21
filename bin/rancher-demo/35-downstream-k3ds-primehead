@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+name=${name-upstream}
+
+# cannot overlap with other installations
+downstream_start=${downstream_start-1}
+downstream_end=${downstream_end-10}
+downstream_prefix=${downstream_prefix-demo}
+
+
+#
+# Install Downstreams
+
+# api ports: 36443 + i
+seq "$downstream_start" "$downstream_end" | xargs -I{} -n1 -P6 ../dev/20-k3d "$downstream_prefix{}" "{}" "$name"

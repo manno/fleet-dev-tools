@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+name=${name-upstream}
+upstream_ctx=${upstream_ctx-k3d-$name}
+kubectl config use-context "$upstream_ctx"
+
+i=0
+for c in $( kubectl get clusters.fleet.cattle.io -n "fleet-default" -ojsonpath='{.items[*].metadata.name}' ); do
+
+  if [ $((i / 4)) = 0 ]; then
+    kubectl patch clusters.fleet.cattle.io -n "fleet-default" "$c" --type=json -p '[{"op": "add", "path": "/metadata/labels/env", "value": "dev" }]'
+  fi
+  if [ $((i / 4)) = 1 ]; then
+    kubectl patch clusters.fleet.cattle.io -n "fleet-default" "$c" --type=json -p '[{"op": "add", "path": "/metadata/labels/env", "value": "test" }]'
+  fi
+  if [ $((i / 4)) = 2 ]; then
+    kubectl patch clusters.fleet.cattle.io -n "fleet-default" "$c" --type=json -p '[{"op": "add", "path": "/metadata/labels/env", "value": "prod" }]'
+    kubectl patch clusters.fleet.cattle.io -n "fleet-default" "$c" --type=json -p '[{"op": "add", "path": "/metadata/labels/metrics", "value": "true" }]'
+  fi
+
+  i=$((i+1))
+done

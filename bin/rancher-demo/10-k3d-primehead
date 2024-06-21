@@ -1,0 +1,16 @@
+#!/bin/bash
+# Description: setup 20 fleet downstreams
+#
+set -e
+
+name=${name-upstream}
+upstream_ctx=${upstream_ctx-k3d-$name}
+upstream_ctx="k3d-$name"
+
+# for ngrok:
+unique_api_port=${unique_api_port-6443}
+unique_tls_port=${unique_tls_port-443}
+
+k3d cluster create "$name" --servers 3 --api-port "$unique_api_port"  -p "$unique_tls_port:443@server:0" --network "$name"
+
+kubectl config use-context "$upstream_ctx"

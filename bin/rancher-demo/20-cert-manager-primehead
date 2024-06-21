@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+upstream_ctx=${upstream_ctx-k3d-$name}
+kubectl config use-context "$upstream_ctx"
+
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
+kubectl wait --for=condition=Available deployment --timeout=2m -n cert-manager --all
