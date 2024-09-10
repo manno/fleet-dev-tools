@@ -13,6 +13,8 @@ export downstream_start=20
 export downstream_end=29
 export downstream_prefix=demo
 
+export rancher_version=v2.8.5
+export k3d_args="-i docker.io/rancher/k3s:v1.28.13-k3s1"
 run-parts --regex 'prime' ../dev/rancher-demo
 
 # ../dev/rancher-demo/10-k3d-primehead

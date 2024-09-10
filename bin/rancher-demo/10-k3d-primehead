@@ -7,10 +7,12 @@ name=${name-upstream}
 upstream_ctx=${upstream_ctx-k3d-$name}
 upstream_ctx="k3d-$name"
 
+k3d_args=${k3d_args-}
+
 # for ngrok:
 unique_api_port=${unique_api_port-6443}
 unique_tls_port=${unique_tls_port-443}
 
-k3d cluster create "$name" --servers 3 --api-port "$unique_api_port"  -p "$unique_tls_port:443@server:0" --network "$name"
+k3d cluster create "$name" --servers 3 --api-port "$unique_api_port" -p "$unique_tls_port:443@server:0" --network "$name" $k3d_args
 
 kubectl config use-context "$upstream_ctx"

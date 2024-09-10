@@ -14,3 +14,7 @@ downstream_prefix=${downstream_prefix-demo}
 
 # api ports: 36443 + i
 seq "$downstream_start" "$downstream_end" | xargs -I{} -n1 -P6 ../dev/20-k3d "$downstream_prefix{}" "{}" "$name"
+
+# force rewrite kubeconfig
+sleep 5
+k3d kubeconfig merge -a -d -u

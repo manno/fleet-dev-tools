@@ -6,6 +6,7 @@ docker_mirror=${docker_mirror-}
 name=${1-upstream}
 i=${2-0}
 net=${3}
+k3d_args=${k3d_args-}
 
 args=""
 if [ -n "$docker_mirror" ]; then
@@ -23,4 +24,4 @@ fi
 
 args="$args --network $net"
 
-k3d cluster create "$name" --servers 1 --api-port $(( 36443 + i )) $args
+k3d cluster create "$name" --servers 1 --api-port $(( 36443 + i )) $args $k3d_args
