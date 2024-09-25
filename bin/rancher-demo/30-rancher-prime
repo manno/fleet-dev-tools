@@ -20,6 +20,7 @@ helm upgrade rancher rancher-prime/rancher --version "$version" \
   --namespace cattle-system \
   --set replicas=1 \
   --set hostname="$public_hostname" \
+  --set agentTLSMode=system-store \
   --set bootstrapPassword=admin \
   --set "extraEnv[0].name=CATTLE_SERVER_URL" \
   --set "extraEnv[0].value=https://$public_hostname" \
