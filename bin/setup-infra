@@ -1,31 +1,29 @@
 #!/usr/bin/env bash
 
-# needed for gitrepo tests
-export GIT_HTTP_PASSWORD=${GIT_HTTP_PASSWORD-adminpass}
 ./dev/import-images-tests-k3d
 
 FLEET_E2E_NS=${FLEET_E2E_NS-fleet-local}
 #./dev/create-zot-certs 'FleetCI-RootCA' # for OCI tests
 
-# infra
-export GIT_HTTP_USER=${GIT_HTTP_USER-fleet-ci}
-export GIT_REPO_SVC_PORT=${GIT_REPO_SVC_PORT-8080}
+# infra-setup
+export FORCE_GIT_SERVER_BUILD
+export GIT_HTTP_PASSWORD=${GIT_HTTP_PASSWORD-adminpass}
 export CI_OCI_USERNAME=${CI_OCI_USERNAME-fleet-ci}
-# TODO no other password allowed, hardcoded in e2e/assets/helm
 export CI_OCI_PASSWORD=${CI_OCI_PASSWORD-foo}
 export CI_OCI_CERTS_DIR=${CI_OCI_CERTS_DIR-FleetCI-RootCA/}
-# TODO ports hardcoded and not in forwad list of setup-k3ds
-export CI_OCI_SVC_PORT=${CI_OCI_SVC_PORT-5000} # zot
-export CI_HELM_SVC_PORT=${CI_HELM_SVC_PORT-8081} # chartmuseum
 export external_ip=${external_ip-192.168.5.15.omg.howdoi.website}
-export HELM_PATH=${HELM_PATH-helm}
 
-pushd e2e/testenv/infra
-go build -o . ./...
-popd
-./e2e/testenv/infra/infra setup
+go run ./e2e/testenv/infra/main.go setup
 
 
 
 # test
-#export GIT_REPO_URL=http://10.0.0.1.omg.howdoi.website:8081
+# needed for gitrepo tests
+export GIT_REPO_URL=http://10.0.0.1.omg.howdoi.website:8081
+export GIT_HTTP_USER=${GIT_HTTP_USER-fleet-ci}
+
+# unsupported
+#export GIT_REPO_SVC_PORT=${GIT_REPO_SVC_PORT-8080}
+# TODO ports hardcoded and not in forwad list of setup-k3ds
+#export CI_OCI_SVC_PORT=${CI_OCI_SVC_PORT-5000} # zot
+#export CI_HELM_SVC_PORT=${CI_HELM_SVC_PORT-8081} # chartmuseum

@@ -14,3 +14,4 @@ wget https://github.com/rancher/rancher/releases/download/"$VER"/rancher-images.
 
 echo "Query Rancher $VER (Dockerfile):"
 wget https://raw.githubusercontent.com/rancher/rancher/"$VER"/package/Dockerfile -qO- | grep -E "FLEET|ARG CHART_DEFAULT_BRANCH"
+wget https://raw.githubusercontent.com/rancher/rancher/"$VER"/build.yaml -qO- | grep -E "fleet|FLEET"
