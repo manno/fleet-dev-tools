@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VER=${1-v2.9.2}
+VER=${1-v2.7.9}
 
 if ! echo "$VER" | grep "^v"; then
   VER="v$VER"

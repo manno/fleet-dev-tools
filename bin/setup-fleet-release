@@ -9,7 +9,7 @@ if [ ! -d ./charts/fleet ]; then
 fi
 
 cluster_name=${1-upstream}
-VER=${VER-0.4.0}
+VER=${VER-0.12.3}
 
 host=$( docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "k3d-$cluster_name-server-0" )
 ca=$( kubectl config view --flatten -o jsonpath='{.clusters[?(@.name == "k3d-'"$cluster_name"'")].cluster.certificate-authority-data}' | base64 -d )
@@ -21,6 +21,12 @@ helm -n cattle-fleet-system upgrade --install --create-namespace --wait \
   --set apiServerCA="$ca" \
   --set apiServerURL="$server" \
   --set debug=true --set debugLevel=1 \
+  --set leaderElection.leaseDuration=10s \
+  --set leaderElection.retryPeriod=1s \
+  --set leaderElection.renewDeadline=5s \
+  --set agent.leaderElection.leaseDuration=10s \
+  --set agent.leaderElection.retryPeriod=1s \
+  --set agent.leaderElection.renewDeadline=5s \
   --set "image.tag=v$VER" \
   --set "agentImage.tag=v$VER" \
   fleet "https://github.com/rancher/fleet/releases/download/v$VER/fleet-$VER.tgz"
