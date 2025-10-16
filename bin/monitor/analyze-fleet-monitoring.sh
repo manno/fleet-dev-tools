@@ -73,13 +73,14 @@ summary_analysis() {
         "DIAGNOSTICS:",
         "  Stuck Bundles: \(.diagnostics.stuckBundles | length) \(if (.diagnostics.stuckBundles | length) > 0 then "⚠" else "✓" end)",
         "  Stuck BundleDeployments: \(.diagnostics.stuckBundleDeployments | length) \(if (.diagnostics.stuckBundleDeployments | length) > 0 then "⚠" else "✓" end)",
+        "  GitRepo/Bundle Inconsistencies: \(.diagnostics.gitrepoBundleInconsistenciesCount) \(if .diagnostics.gitrepoBundleInconsistenciesCount > 0 then "⚠ STALE BUNDLES" else "✓" end)",
         "  Content Issues: \(.diagnostics.contentIssuesCount) \(if .diagnostics.contentIssuesCount > 0 then "⚠" else "✓" end)",
         "  Orphaned Secrets: \(.diagnostics.orphanedSecretsCount) \(if .diagnostics.orphanedSecretsCount > 0 then "⚠" else "✓" end)",
         "  Invalid Secret Owners: \(.diagnostics.invalidSecretOwnersCount) \(if .diagnostics.invalidSecretOwnersCount > 0 then "⚠" else "✓" end)",
         "  Bundles with Deletion Timestamp: \(.diagnostics.bundlesWithDeletionTimestamp) \(if .diagnostics.bundlesWithDeletionTimestamp > 0 then "⚠" else "✓" end)",
         "  BundleDeployments with Deletion Timestamp: \(.diagnostics.bundleDeploymentsWithDeletionTimestamp) \(if .diagnostics.bundleDeploymentsWithDeletionTimestamp > 0 then "⚠" else "✓" end)",
         "  Contents with Deletion Timestamp: \(.diagnostics.contentsWithDeletionTimestamp) \(if .diagnostics.contentsWithDeletionTimestamp > 0 then "⚠" else "✓" end)",
-        "  API Consistency: \(if .apiConsistency.consistent then "✓ CONSISTENT" else "✗ INCONSISTENT" end)",
+        "  API Consistency: \(if .apiConsistency.consistent then "✓ CONSISTENT" else "✗ INCONSISTENT - TIME TRAVEL DETECTED" end)",
         "",
         "GITREPOS:",
         (.gitrepos[] | "  \(.name): Commit: \((.commit // "none")[0:8]) | Gen: \(.generation)/\(.observedGeneration) | ForceSync: \(.forceSyncGeneration // "N/A") | Ready: \(if ((.conditions[] | select(.type == "Ready") | .status) // "Unknown") == "True" then "✓" else "✗" end)"),
@@ -106,7 +107,7 @@ detailed_analysis() {
             if c == null or c == "none" then "N/A"
             else c[0:8]
             end;
-        
+
         "════════════════════════════════════════════════════════════════",
         "DETAILED FLEET ANALYSIS - \(.timestamp)",
         "════════════════════════════════════════════════════════════════",
@@ -119,7 +120,7 @@ detailed_analysis() {
         "",
         (if (.diagnostics.stuckBundles | length) > 0 then
             "╔═══ STUCK BUNDLES ⚠ ═══╗",
-            (.diagnostics.stuckBundles[] | 
+            (.diagnostics.stuckBundles[] |
                 "  Bundle: \(.namespace)/\(.name)",
                 "    Generation: \(.generation) / Observed: \(.observedGeneration)",
                 "    Deletion Timestamp: \(.deletionTimestamp // "none")",
@@ -131,7 +132,7 @@ detailed_analysis() {
         else "" end),
         (if (.diagnostics.stuckBundleDeployments | length) > 0 then
             "╔═══ STUCK BUNDLEDEPLOYMENTS ⚠ ═══╗",
-            (.diagnostics.stuckBundleDeployments[] | 
+            (.diagnostics.stuckBundleDeployments[] |
                 "  BundleDeployment: \(.namespace)/\(.name)",
                 "    Generation: \(.generation) / Observed: \(.observedGeneration // "N/A")",
                 "    DeploymentID: \(.deploymentID[0:50])...",
@@ -146,7 +147,7 @@ detailed_analysis() {
         else "" end),
         (if .diagnostics.orphanedSecretsCount > 0 then
             "╔═══ ORPHANED SECRETS ⚠ ═══╗",
-            (.orphanedSecrets[] | 
+            (.orphanedSecrets[] |
                 "  Secret: \(.namespace)/\(.name)",
                 "    Type: \(.type)",
                 "    Reason: \(.reason)",
@@ -158,7 +159,7 @@ detailed_analysis() {
         else "" end),
         (if .diagnostics.invalidSecretOwnersCount > 0 then
             "╔═══ INVALID SECRET OWNERS ⚠ ═══╗",
-            (.diagnostics.invalidSecretOwners[] | 
+            (.diagnostics.invalidSecretOwners[] |
                 "  Secret: \(.namespace)/\(.name)",
                 "    Type: \(.type)",
                 "    Issue: \(.issue)",
@@ -171,13 +172,13 @@ detailed_analysis() {
         else "" end),
         (if (.diagnostics.bundlesWithDeletionTimestamp + .diagnostics.bundleDeploymentsWithDeletionTimestamp) > 0 then
             "╔═══ RESOURCES WITH DELETION TIMESTAMPS ⚠ ═══╗",
-            (.bundles[] | select(.deletionTimestamp != null) | 
+            (.bundles[] | select(.deletionTimestamp != null) |
                 "  Bundle: \(.namespace)/\(.name)",
                 "    Deletion Timestamp: \(.deletionTimestamp)",
                 "    Finalizers: \(.finalizers | join(", "))",
                 ""
             ),
-            (.bundledeployments[] | select(.deletionTimestamp != null) | 
+            (.bundledeployments[] | select(.deletionTimestamp != null) |
                 "  BundleDeployment: \(.namespace)/\(.name)",
                 "    Deletion Timestamp: \(.deletionTimestamp)",
                 "    Finalizers: \(.finalizers | join(", "))",
@@ -194,7 +195,7 @@ detailed_analysis() {
         else "" end),
         (if (.recentEvents | length) > 0 then
             "╔═══ RECENT EVENTS ═══╗",
-            (.recentEvents[] | 
+            (.recentEvents[] |
                 "  [\(.type)] \(.involvedObject.kind)/\(.involvedObject.name)",
                 "    Reason: \(.reason)",
                 "    Message: \(.message)",
@@ -226,7 +227,7 @@ issues_only() {
             if c == null or c == "none" then "N/A"
             else c[0:8]
             end;
-        
+
         "════════════════════════════════════════════════════════════════",
         "FLEET ISSUES REPORT - \(.timestamp)",
         "════════════════════════════════════════════════════════════════",
@@ -239,7 +240,7 @@ issues_only() {
         else "" end),
         (if (.diagnostics.stuckBundles | length) > 0 then
             "✗ STUCK BUNDLES (\(.diagnostics.stuckBundles | length)):",
-            (.diagnostics.stuckBundles[] | 
+            (.diagnostics.stuckBundles[] |
                 "  • \(.namespace)/\(.name)",
                 "    Reasons: \(.reasons | join(", "))",
                 "    Gen: \(.generation)/\(.observedGeneration) | DelTime: \(.deletionTimestamp // "none")",
@@ -248,16 +249,26 @@ issues_only() {
         else "" end),
         (if (.diagnostics.stuckBundleDeployments | length) > 0 then
             "✗ STUCK BUNDLEDEPLOYMENTS (\(.diagnostics.stuckBundleDeployments | length)):",
-            (.diagnostics.stuckBundleDeployments[] | 
+            (.diagnostics.stuckBundleDeployments[] |
                 "  • \(.namespace)/\(.name)",
                 "    Reasons: \(.reasons | join(", "))",
                 "    Gen: \(.generation)/\(.observedGeneration // "N/A") | DepID Match: \(if .deploymentID == .appliedDeploymentID then "YES" else "NO" end)",
                 ""
             )
         else "" end),
+        (if .diagnostics.gitrepoBundleInconsistenciesCount > 0 then
+            "✗ GITREPO/BUNDLE INCONSISTENCIES (\(.diagnostics.gitrepoBundleInconsistenciesCount)):",
+            (.diagnostics.gitrepoBundleInconsistencies[] |
+                "  • Bundle: \(.namespace)/\(.name) (repo: \(.repoName))",
+                "    Bundle Commit: \(.bundleCommit[0:8]) | GitRepo Commit: \(.gitrepoCommit[0:8]) \(if .commitMismatch then "⚠ MISMATCH" else "" end)",
+                "    Bundle ForceSyncGen: \(.bundleForceSyncGen // "null") | GitRepo ForceSyncGen: \(.gitrepoForceSyncGen // "null") \(if .forceSyncGenMismatch then "⚠ MISMATCH" else "" end)",
+                "    Issues: \(.issues | join(", "))",
+                ""
+            )
+        else "" end),
         (if .diagnostics.contentIssuesCount > 0 then
             "✗ CONTENT RESOURCE ISSUES (\(.diagnostics.contentIssuesCount)):",
-            (.contentIssues[] | 
+            (.contentIssues[] |
                 "  • BundleDeployment: \(.namespace)/\(.name)",
                 "    Content: \(.contentName[0:30])...",
                 "    Issues: \(.issues | join(", "))",
@@ -268,7 +279,7 @@ issues_only() {
         else "" end),
         (if .diagnostics.orphanedSecretsCount > 0 then
             "⚠ ORPHANED SECRETS (\(.diagnostics.orphanedSecretsCount)):",
-            (.orphanedSecrets[] | 
+            (.orphanedSecrets[] |
                 "  • \(.namespace)/\(.name)",
                 "    Type: \(.type) | Reason: \(.reason)",
                 "    DelTime: \(.deletionTimestamp // "none")",
@@ -277,7 +288,7 @@ issues_only() {
         else "" end),
         (if .diagnostics.invalidSecretOwnersCount > 0 then
             "✗ INVALID SECRET OWNERS (\(.diagnostics.invalidSecretOwnersCount)):",
-            (.diagnostics.invalidSecretOwners[] | 
+            (.diagnostics.invalidSecretOwners[] |
                 "  • \(.namespace)/\(.name)",
                 "    Issue: \(.issue) | Owner: \(.ownerKind)/\(.ownerName)",
                 "    UID Mismatch: \(.ownerUID[0:13]) vs \((.expectedUID // "N/A")[0:13])",
@@ -286,7 +297,7 @@ issues_only() {
         else "" end),
         (if .diagnostics.bundlesWithDeletionTimestamp > 0 then
             "⚠ BUNDLES WITH DELETION TIMESTAMP (\(.diagnostics.bundlesWithDeletionTimestamp)):",
-            (.bundles[] | select(.deletionTimestamp != null) | 
+            (.bundles[] | select(.deletionTimestamp != null) |
                 "  • \(.namespace)/\(.name)",
                 "    DelTime: \(.deletionTimestamp)",
                 "    Finalizers: \(.finalizers | join(", "))",
@@ -295,7 +306,7 @@ issues_only() {
         else "" end),
         (if .diagnostics.bundleDeploymentsWithDeletionTimestamp > 0 then
             "⚠ BUNDLEDEPLOYMENTS WITH DELETION TIMESTAMP (\(.diagnostics.bundleDeploymentsWithDeletionTimestamp)):",
-            (.bundledeployments[] | select(.deletionTimestamp != null) | 
+            (.bundledeployments[] | select(.deletionTimestamp != null) |
                 "  • \(.namespace)/\(.name)",
                 "    DelTime: \(.deletionTimestamp)",
                 "    Finalizers: \(.finalizers | join(", "))",
@@ -304,7 +315,7 @@ issues_only() {
         else "" end),
         (if .diagnostics.contentsWithDeletionTimestamp > 0 then
             "⚠ CONTENTS WITH DELETION TIMESTAMP (\(.diagnostics.contentsWithDeletionTimestamp)):",
-            (.contents[] | select(.deletionTimestamp != null) | 
+            (.contents[] | select(.deletionTimestamp != null) |
                 "  • \(.name[0:40])...",
                 "    DelTime: \(.deletionTimestamp)",
                 "    Finalizers: \(.finalizers | join(", "))",
@@ -317,8 +328,9 @@ issues_only() {
             "  This indicates the API server is returning stale cached data!",
             ""
         else "" end),
-        (if (.diagnostics.stuckBundles | length) == 0 and 
+        (if (.diagnostics.stuckBundles | length) == 0 and
             (.diagnostics.stuckBundleDeployments | length) == 0 and
+            .diagnostics.gitrepoBundleInconsistenciesCount == 0 and
             .diagnostics.contentIssuesCount == 0 and
             .diagnostics.orphanedSecretsCount == 0 and
             .diagnostics.invalidSecretOwnersCount == 0 and
@@ -337,15 +349,15 @@ issues_only() {
 compare_snapshots() {
     local file1="$1"
     local file2="$2"
-    
+
     jq -n --slurpfile before "$file1" --slurpfile after "$file2" '
         def format_commit(c):
             if c == null or c == "none" then "N/A"
             else c[0:8]
             end;
-        
+
         $before[0] as $b | $after[0] as $a |
-        
+
         "════════════════════════════════════════════════════════════════",
         "FLEET CHANGES COMPARISON",
         "════════════════════════════════════════════════════════════════",
