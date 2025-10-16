@@ -46,6 +46,18 @@ log_info() {
     echo -e "${GREEN}[INFO]${NC} $1" >&2
 }
 
+# Ensure output is valid JSON, using default if not
+ensure_json() {
+    local input="$1"
+    local default="${2:-[]}"
+    
+    if [[ -z "$input" ]] || ! echo "$input" | jq -e . >/dev/null 2>&1; then
+        echo "$default"
+    else
+        echo "$input"
+    fi
+}
+
 # Function to get controller pod info
 get_controller_info() {
     local pod_name=$(kubectl get pods -n "$NAMESPACE" -l app=fleet-controller -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
@@ -53,7 +65,7 @@ get_controller_info() {
     local pod_status=$(kubectl get pods -n "$NAMESPACE" -l app=fleet-controller -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "Unknown")
     local pod_start_time=$(kubectl get pods -n "$NAMESPACE" -l app=fleet-controller -o jsonpath='{.items[0].status.startTime}' 2>/dev/null || echo "")
 
-    jq -n \
+    local result=$(jq -nc \
         --arg name "$pod_name" \
         --arg restarts "$pod_restarts" \
         --arg status "$pod_status" \
@@ -63,14 +75,16 @@ get_controller_info() {
             restarts: ($restarts | tonumber),
             status: $status,
             startTime: $start_time
-        }'
+        }' 2>/dev/null)
+    
+    ensure_json "$result" '{}'
 }
 
 # Function to get GitRepo information
 get_gitrepos() {
     local gitrepos=$(kubectl get gitrepos -A -o json 2>/dev/null || echo '{"items":[]}')
 
-    echo "$gitrepos" | jq -c '[.items[] | {
+    local result=$(echo "$gitrepos" | jq -c '[.items[] | {
         namespace: .metadata.namespace,
         name: .metadata.name,
         generation: .metadata.generation,
@@ -91,14 +105,16 @@ get_gitrepos() {
         }],
         display: .status.display,
         summary: .status.summary
-    }]'
+    }]' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to get Bundle information
 get_bundles() {
     local bundles=$(kubectl get bundles -A -o json 2>/dev/null || echo '{"items":[]}')
 
-    echo "$bundles" | jq -c '[.items[] | {
+    local result=$(echo "$bundles" | jq -c '[.items[] | {
         namespace: .metadata.namespace,
         name: .metadata.name,
         uid: .metadata.uid,
@@ -123,14 +139,16 @@ get_bundles() {
         resourcesSHA256Sum: .status.resourcesSHA256Sum,
         targetCustomizations: .spec.targetCustomizations,
         resourceErrors: [.status.resourceErrors[]?]
-    }]'
+    }]' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to get BundleDeployment information
 get_bundledeployments() {
     local bds=$(kubectl get bundledeployments -A -o json 2>/dev/null || echo '{"items":[]}')
 
-    echo "$bds" | jq -c '[.items[] | {
+    local result=$(echo "$bds" | jq -c '[.items[] | {
         namespace: .metadata.namespace,
         name: .metadata.name,
         uid: .metadata.uid,
@@ -161,21 +179,25 @@ get_bundledeployments() {
         appliedDeploymentID: .status.appliedDeploymentID,
         appliedContentName: ((.status.appliedDeploymentID // "") | split(":")[0]),
         release: .status.release
-    }]'
+    }]' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to get Content resources
 get_contents() {
     local contents=$(kubectl get contents -A -o json 2>/dev/null || echo '{"items":[]}')
 
-    echo "$contents" | jq -c '[.items[] | {
+    local result=$(echo "$contents" | jq -c '[.items[] | {
         name: .metadata.name,
         resourceVersion: .metadata.resourceVersion,
         creationTimestamp: .metadata.creationTimestamp,
         deletionTimestamp: .metadata.deletionTimestamp,
         finalizers: .metadata.finalizers,
         sha256sum: .metadata.name
-    }]'
+    }]' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to detect missing or problematic content resources
@@ -187,7 +209,7 @@ check_content_issues() {
     local all_contents=$(kubectl get contents -A -o json 2>/dev/null || echo '{"items":[]}')
 
     # Combine and process using stdin to avoid argument length limits
-    jq -sc '
+    local result=$(jq -sc '
         .[0] as $contents_data |
         .[1] as $bds_data |
         # Create content map
@@ -216,7 +238,9 @@ check_content_issues() {
                 ]
             } | select(.issues | length > 0)
         )
-    ' <(echo "$all_contents") <(echo "$all_bds")
+    ' <(echo "$all_contents") <(echo "$all_bds") 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to get bundle lifecycle secrets (values and deployment)
@@ -228,7 +252,7 @@ get_bundle_secrets() {
     local deployment_secrets=$(kubectl get secrets -A --field-selector type=fleet.cattle.io/bundle-deployment/v1alpha1 -o json 2>/dev/null || echo '{"items":[]}')
 
     # Combine both types
-    echo "$values_secrets" "$deployment_secrets" | jq -sc '
+    local result=$(echo "$values_secrets" "$deployment_secrets" | jq -sc '
         (.[0].items // []) + (.[1].items // []) | map({
             namespace: .metadata.namespace,
             name: .metadata.name,
@@ -241,7 +265,9 @@ get_bundle_secrets() {
             type: .type,
             dataKeys: (.data | keys),
             ownerReferences: .metadata.ownerReferences
-        })'
+        })' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to check for orphaned/stale secrets
@@ -259,7 +285,7 @@ get_orphaned_secrets() {
     local all_bds=$(kubectl get bundledeployments -A -o json 2>/dev/null || echo '{"items":[]}')
 
     # Combine and process using stdin to avoid argument length limits
-    jq -sc '
+    local result=$(jq -sc '
         .[0] as $values_data |
         .[1] as $deployment_data |
         .[2] as $bundles_data |
@@ -305,7 +331,9 @@ get_orphaned_secrets() {
                 )
             }
         )
-    ' <(echo "$values_secrets") <(echo "$deployment_secrets") <(echo "$all_bundles") <(echo "$all_bds")
+    ' <(echo "$values_secrets") <(echo "$deployment_secrets") <(echo "$all_bundles") <(echo "$all_bds") 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to check API server consistency
@@ -327,7 +355,7 @@ check_api_consistency() {
         consistent="false"
     fi
 
-    jq -n \
+    local result=$(jq -nc \
         --arg v1 "$v1" \
         --arg v2 "$v2" \
         --arg v3 "$v3" \
@@ -335,7 +363,9 @@ check_api_consistency() {
         '{
             consistent: ($consistent == "true"),
             versions: [$v1, $v2, $v3]
-        }'
+        }' 2>/dev/null)
+    
+    ensure_json "$result" '{}'
 }
 
 # Function to get events related to fleet resources
@@ -344,7 +374,7 @@ get_fleet_events() {
     local events=$(kubectl get events -A --field-selector involvedObject.apiVersion=fleet.cattle.io/v1alpha1 \
         --sort-by='.lastTimestamp' -o json 2>/dev/null || echo '{"items":[]}')
 
-    echo "$events" | jq -c '[.items[] | {
+    local result=$(echo "$events" | jq -c '[.items[] | {
         namespace: .metadata.namespace,
         type: .type,
         reason: .reason,
@@ -357,14 +387,16 @@ get_fleet_events() {
         count: .count,
         firstTimestamp: .firstTimestamp,
         lastTimestamp: .lastTimestamp
-    }] | .[-20:]'
+    }] | .[-20:]' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to detect stuck bundles
 detect_stuck_bundles() {
     local bundles=$(kubectl get bundles -A -o json 2>/dev/null || echo '{"items":[]}')
 
-    echo "$bundles" | jq -c '[.items[] |
+    local result=$(echo "$bundles" | jq -c '[.items[] |
         select(
             (.status.conditions[]? | select(.type == "Ready" and .status != "True")) or
             (.metadata.deletionTimestamp != null) or
@@ -383,14 +415,16 @@ detect_stuck_bundles() {
                 (if (.status.conditions[]? | select(.type == "Ready" and .status != "True")) then "not_ready" else empty end)
             ]
         }
-    ]'
+    ]' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to detect stuck bundledeployments
 detect_stuck_bundledeployments() {
     local bds=$(kubectl get bundledeployments -A -o json 2>/dev/null || echo '{"items":[]}')
 
-    echo "$bds" | jq -c '[.items[] |
+    local result=$(echo "$bds" | jq -c '[.items[] |
         select(
             (.status.conditions[]? | select(.type == "Ready" and .status != "True")) or
             (.metadata.deletionTimestamp != null) or
@@ -413,7 +447,9 @@ detect_stuck_bundledeployments() {
                 (if (.status.conditions[]? | select(.type == "Ready" and .status != "True")) then "not_ready" else empty end)
             ]
         }
-    ]'
+    ]' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to detect inconsistencies between GitRepos and Bundles
@@ -421,7 +457,7 @@ detect_gitrepo_bundle_inconsistencies() {
     local gitrepos=$(kubectl get gitrepos -A -o json 2>/dev/null || echo '{"items":[]}')
     local bundles=$(kubectl get bundles -A -o json 2>/dev/null || echo '{"items":[]}')
 
-    jq -sc '
+    local result=$(jq -sc '
         .[0] as $gitrepos_data |
         .[1] as $bundles_data |
         # Create GitRepo map by repo name
@@ -459,7 +495,9 @@ detect_gitrepo_bundle_inconsistencies() {
                 ]
             }
         )
-    ' <(echo "$gitrepos") <(echo "$bundles")
+    ' <(echo "$gitrepos") <(echo "$bundles") 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Function to validate ownerReferences on secrets
@@ -475,7 +513,7 @@ validate_secret_owners() {
     local all_bds=$(kubectl get bundledeployments -A -o json 2>/dev/null || echo '{"items":[]}')
 
     # Combine and process using stdin to avoid argument length limits
-    jq -sc '
+    local result=$(printf '%s\n%s\n%s\n%s' "$values_secrets" "$deployment_secrets" "$all_bundles" "$all_bds" | jq -sc '
         .[0] as $values_data |
         .[1] as $deployment_data |
         .[2] as $bundles_data |
@@ -527,7 +565,9 @@ validate_secret_owners() {
                 )
             }
         ) | map(select(.valid == false))
-    ' <(echo "$values_secrets") <(echo "$deployment_secrets") <(echo "$all_bundles") <(echo "$all_bds")
+    ' 2>/dev/null)
+    
+    ensure_json "$result" '[]'
 }
 
 # Main monitoring function
@@ -552,24 +592,8 @@ monitor_fleet() {
     local gitrepo_bundle_inconsistencies=$(detect_gitrepo_bundle_inconsistencies)
     local invalid_secret_owners=$(validate_secret_owners)
 
-    # Validate JSON before combining
-    echo "$controller_info" | jq . >/dev/null 2>&1 || controller_info='{}'
-    echo "$gitrepos" | jq . >/dev/null 2>&1 || gitrepos='[]'
-    echo "$bundles" | jq . >/dev/null 2>&1 || bundles='[]'
-    echo "$bundledeployments" | jq . >/dev/null 2>&1 || bundledeployments='[]'
-    echo "$contents" | jq . >/dev/null 2>&1 || contents='[]'
-    echo "$bundle_secrets" | jq . >/dev/null 2>&1 || bundle_secrets='[]'
-    echo "$orphaned_secrets" | jq . >/dev/null 2>&1 || orphaned_secrets='[]'
-    echo "$content_issues" | jq . >/dev/null 2>&1 || content_issues='[]'
-    echo "$api_consistency" | jq . >/dev/null 2>&1 || api_consistency='{}'
-    echo "$fleet_events" | jq . >/dev/null 2>&1 || fleet_events='[]'
-    echo "$stuck_bundles" | jq . >/dev/null 2>&1 || stuck_bundles='[]'
-    echo "$stuck_bundledeployments" | jq . >/dev/null 2>&1 || stuck_bundledeployments='[]'
-    echo "$gitrepo_bundle_inconsistencies" | jq . >/dev/null 2>&1 || gitrepo_bundle_inconsistencies='[]'
-    echo "$invalid_secret_owners" | jq . >/dev/null 2>&1 || invalid_secret_owners='[]'
-
     # Combine into single JSON output
-    jq -n \
+    jq -nc \
         --arg timestamp "$timestamp" \
         --argjson controller "$controller_info" \
         --argjson gitrepos "$gitrepos" \
